@@ -7,67 +7,107 @@ interface TurnState {
   activeFaction: FactionId;
   phase: TurnPhase;
   timeLeft: number;
-  troopsToDeploy: number;
+  reinforcements: Record<FactionId, number>;
   factionsOrder: FactionId[];
+  turnCount: number;
+
   startTurn: () => void;
   endPhase: () => void;
   endTurn: () => void;
   tick: () => void;
-  canControl: (factionId: FactionId) => boolean;
+  canControl: (f: FactionId) => boolean;
+  useTroop: (count?: number) => void;
+  getCurrentTroops: () => number;
 }
 
 export const useTurnStore = create<TurnState>((set, get) => ({
   activeFaction: "regime",
   phase: "deploy",
   timeLeft: 60,
-  troopsToDeploy: 3,
+  reinforcements: {
+    regime: 0,
+    alliance: 0,
+    sdf: 0,
+    isis: 0,
+    rebels: 0,
+    axis: 0,
+    neutral: 0,
+  },
   factionsOrder: [],
+  turnCount: 1,
 
   startTurn: () => {
     const { provinces } = useGameStore.getState();
+    const { reinforcements, activeFaction } = get();
 
+    // figure out play order from who actually owns anything
     const occupied = Object.values(provinces).reduce((acc, p) => {
-      if (!acc.includes(p.owner) && p.owner !== "neutral") acc.push(p.owner);
+      if (p.owner !== "neutral" && !acc.includes(p.owner)) acc.push(p.owner);
       return acc;
     }, [] as FactionId[]);
     if (occupied.length === 0) return;
 
-    const next = get().activeFaction
-      ? occupied[(occupied.indexOf(get().activeFaction) + 1) % occupied.length]
-      : occupied[0];
+    const next =
+      activeFaction && occupied.includes(activeFaction)
+        ? occupied[(occupied.indexOf(activeFaction) + 1) % occupied.length]
+        : occupied[0];
+
+    // compute new reinforcements for "next"
+    const owned = Object.values(provinces).filter(
+      (p) => p.owner === next
+    ).length;
+    const base = 3;
+    const bonus = Math.floor(owned / 3);
+    const gained = base + bonus;
+
+    // carry leftovers for THIS faction only
+    const carry = reinforcements[next] ?? 0;
+    const pool = carry + gained;
 
     set({
       activeFaction: next,
       phase: "deploy",
       timeLeft: 60,
-      troopsToDeploy: 3,
+      reinforcements: { ...reinforcements, [next]: pool },
       factionsOrder: occupied,
+      turnCount: get().turnCount + 1,
     });
-
-    console.log(`🎯 Turn started for: ${next}`);
   },
 
   endPhase: () => {
-    const phase = get().phase;
-    if (phase === "deploy") set({ phase: "attack" });
-    else if (phase === "attack") set({ phase: "end" });
+    const cur = get().phase;
+    if (cur === "deploy") set({ phase: "attack" });
+    else if (cur === "attack") set({ phase: "end" });
   },
 
   endTurn: () => {
-    get().startTurn(); // move to next faction automatically
+    // force going through phases in order
+    const { phase, endPhase } = get();
+    if (phase !== "end") {
+      endPhase();
+      return;
+    }
+    get().startTurn();
   },
 
   tick: () => {
     const { timeLeft, endTurn } = get();
-    if (timeLeft <= 0) {
-      endTurn();
-    } else {
-      set({ timeLeft: timeLeft - 1 });
-    }
+    if (timeLeft <= 0) endTurn();
+    else set({ timeLeft: timeLeft - 1 });
   },
 
-  canControl: (factionId: FactionId) => {
-    const { activeFaction } = get();
-    return factionId === activeFaction;
+  canControl: (f) => get().activeFaction === f,
+
+  useTroop: (count = 1) => {
+    const { activeFaction, reinforcements } = get();
+    const avail = Math.max(0, (reinforcements[activeFaction] ?? 0) - count);
+    set({
+      reinforcements: { ...reinforcements, [activeFaction]: avail },
+    });
+  },
+
+  getCurrentTroops: () => {
+    const { activeFaction, reinforcements } = get();
+    return reinforcements[activeFaction] ?? 0;
   },
 }));

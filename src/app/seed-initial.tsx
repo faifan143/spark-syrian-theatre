@@ -11,7 +11,7 @@ export default function SeedInitial() {
       Damascus: "regime",
       Rural_Damascus: "regime",
       Daraa: "regime",
-      Quneitra: "regime",
+      Quneitra: "alliance",
       "As-Suwayda": "regime",
 
       Homs: "regime",
@@ -23,7 +23,7 @@ export default function SeedInitial() {
       Tartus: "regime",
 
       "Ar-Raqqah": "sdf",
-      "Deir_ez-zor": "regime",
+      "Deir_ez-zor": "isis",
       "Al-Hasakah": "sdf",
     };
 

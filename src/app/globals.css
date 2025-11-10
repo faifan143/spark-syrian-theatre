@@ -2,8 +2,7 @@
    globals.css (FIXED)
    ========================================== */
 
-@tailwind base;
-@tailwind components;
+@import "tailwindcss";
 @tailwind utilities;
 
 html,
@@ -253,4 +252,33 @@ a:focus-visible {
   .no-print {
     display: none;
   }
+}
+
+.territory.attacker {
+  stroke: #fff;
+  stroke-width: 4px;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8))
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.6));
+  animation: pulse-glow 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8))
+      drop-shadow(0 0 5px rgba(255, 255, 255, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1))
+      drop-shadow(0 0 5px rgba(255, 255, 255, 0.8));
+  }
+}
+
+.army-group text {
+  paint-order: stroke fill;
+  stroke: rgba(0, 0, 0, 0.9);
+  stroke-width: 1.2px;
+  fill: #fff;
+  font-weight: 900;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
 }

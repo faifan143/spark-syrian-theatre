@@ -93,7 +93,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     set((s) => ({
       provinces: {
         ...s.provinces,
-        [id]: { id, owner, armies: s.provinces[id]?.armies ?? 0 },
+        [id]: { id, owner, armies: s.provinces[id]?.armies ?? 1 },
       },
     })),
 
@@ -105,19 +105,19 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       // 🧩 adjacency rules (define once)
       const adjacency: Record<string, string[]> = {
-        Damascus: ["Rural_Damascus", "Daraa", "Homs", "Quneitra"],
-        Rural_Damascus: ["Damascus", "Homs", "Daraa", "As-Suwayda"],
+        Damascus: ["Rural_Damascus"],
+        Rural_Damascus: ["Damascus", "Homs", "Daraa", "Quneitra", "As-Suwayda"],
         Daraa: ["Rural_Damascus", "Quneitra", "As-Suwayda"],
-        Quneitra: ["Damascus", "Daraa"],
+        Quneitra: ["Rural_Damascus", "Daraa"],
         "As-Suwayda": ["Rural_Damascus", "Daraa"],
-        Homs: ["Rural_Damascus", "Hama", "Tartus"],
-        Hama: ["Homs", "Aleppo", "Idlib"],
+        Homs: ["Rural_Damascus", "Hama", "Tartus", "Ar-Raqqah", "Deir_ez-zor"],
+        Hama: ["Homs", "Aleppo", "Idlib", "Latakia", "Tartus", "Ar-Raqqah"],
         Aleppo: ["Idlib", "Hama", "Ar-Raqqah"],
         Idlib: ["Hama", "Aleppo", "Latakia"],
         Latakia: ["Idlib", "Hama", "Tartus"],
-        Tartus: ["Latakia", "Homs"],
-        "Ar-Raqqah": ["Aleppo", "Deir_ez-zor", "Al-Hasakah"],
-        "Deir_ez-zor": ["Ar-Raqqah", "Al-Hasakah"],
+        Tartus: ["Latakia", "Homs", "Hama"],
+        "Ar-Raqqah": ["Aleppo", "Deir_ez-zor", "Al-Hasakah", "Homs", "Hama"],
+        "Deir_ez-zor": ["Ar-Raqqah", "Al-Hasakah", "Homs"],
         "Al-Hasakah": ["Ar-Raqqah", "Deir_ez-zor"],
       };
 
@@ -190,3 +190,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       };
     }),
 }));
+
+export const getFactionStats = (factionId: FactionId) => {
+  const { provinces } = useGameStore.getState();
+  let totalTroops = 0;
+  let territories = 0;
+  for (const p of Object.values(provinces)) {
+    if (p.owner === factionId) {
+      territories++;
+      totalTroops += p.armies;
+    }
+  }
+  return { territories, totalTroops };
+};

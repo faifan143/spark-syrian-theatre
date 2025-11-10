@@ -5,6 +5,8 @@ import TurnHUD from "@/components/TurnHUD";
 import { useTurnStore } from "@/state/turnStore";
 import { useEffect } from "react";
 import SeedInitial from "./seed-initial";
+import CombatModal from "@/components/CombatModal";
+import MarchModal from "@/components/MarchModal";
 
 export default function Page() {
   const startTurn = useTurnStore((s) => s.startTurn);
@@ -22,6 +24,8 @@ export default function Page() {
       <div className="absolute inset-0 flex items-center justify-center">
         <SyrianMap />
       </div>
+      <CombatModal />
+      <MarchModal />
     </main>
   );
 }

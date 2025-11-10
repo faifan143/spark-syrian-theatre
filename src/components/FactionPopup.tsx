@@ -4,26 +4,26 @@
 
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import { useCombatStore } from "@/state/combatStore";
 import { useGameStore } from "@/state/gameStore";
-import { Zap, Sword, Shield, AlertTriangle } from "lucide-react";
-import { useTurnStore } from "@/state/turnStore";
-import toast from "react-hot-toast";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, Shield, Sword, Zap } from "lucide-react";
+import Image from "next/image";
 
 interface FactionPopupProps {
   provinceId: string | null;
   onClose: () => void;
+  selectedAttacker?: string | null;
+  canAttack?: boolean; // 🆕 whether we show the Attack button
 }
 
 export default function FactionPopup({
   provinceId,
+  canAttack,
+  selectedAttacker,
   onClose,
 }: FactionPopupProps) {
   const factions = useGameStore((s) => s.factions);
-  const { activeFaction: currentFaction, phase, canControl } = useTurnStore();
-  const attackProvince = useGameStore((s) => s.attackProvince);
-
   const province = useGameStore((s) =>
     provinceId ? s.provinces[provinceId] : null
   );
@@ -438,79 +438,21 @@ export default function FactionPopup({
                 </div>
               </div>
             </motion.div>
-            {/* ⚔️ ATTACK BUTTON — only visible if it’s your turn and in Attack phase */}
-            {phase === "attack" &&
-              canControl(currentFaction) &&
-              province.owner !== currentFaction && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    const state = useGameStore.getState();
-                    const attackerEntry = Object.entries(state.provinces).find(
-                      ([, p]) =>
-                        p.owner === currentFaction &&
-                        p.armies >= state.provinces[province.id].armies &&
-                        state.provinces[p.id] &&
-                        {
-                          Damascus: [
-                            "Rural_Damascus",
-                            "Daraa",
-                            "Homs",
-                            "Quneitra",
-                          ],
-                          Rural_Damascus: [
-                            "Damascus",
-                            "Homs",
-                            "Daraa",
-                            "As-Suwayda",
-                          ],
-                          Daraa: ["Rural_Damascus", "Quneitra", "As-Suwayda"],
-                          Quneitra: ["Damascus", "Daraa"],
-                          "As-Suwayda": ["Rural_Damascus", "Daraa"],
-                          Homs: ["Rural_Damascus", "Hama", "Tartus"],
-                          Hama: ["Homs", "Aleppo", "Idlib"],
-                          Aleppo: ["Idlib", "Hama", "Ar-Raqqah"],
-                          Idlib: ["Hama", "Aleppo", "Latakia"],
-                          Latakia: ["Idlib", "Hama", "Tartus"],
-                          Tartus: ["Latakia", "Homs"],
-                          "Ar-Raqqah": ["Aleppo", "Deir_ez-zor", "Al-Hasakah"],
-                          "Deir_ez-zor": ["Ar-Raqqah", "Al-Hasakah"],
-                          "Al-Hasakah": ["Ar-Raqqah", "Deir_ez-zor"],
-                        }[p.id]?.includes(province.id)
-                    );
 
-                    if (!attackerEntry) {
-                      toast.error(
-                        "You must attack from an adjacent territory with equal or greater troops!"
-                      );
-
-                      return;
-                    }
-
-                    const attacker = attackerEntry[0];
-                    attackProvince(attacker, province.id);
-                    onClose();
-                  }}
-                  style={{
-                    width: "100%",
-                    marginTop: "10px",
-                    padding: "10px",
-                    backgroundColor: colors.border,
-                    color: colors.text,
-                    fontWeight: 900,
-                    fontSize: "16px",
-                    borderRadius: "6px",
-                    border: `2px solid ${colors.text}`,
-                    cursor: "pointer",
-                    boxShadow: "0 4px 10px rgba(0,0,0,0.5)",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                  }}
-                >
-                  ⚔️ ATTACK
-                </motion.button>
-              )}
+            {canAttack && selectedAttacker && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  const openCombat = useCombatStore.getState().openCombat;
+                  openCombat(selectedAttacker, province.id);
+                  onClose();
+                }}
+                className="mt-3 w-full rounded-md border-2 border-white bg-red-600 py-2 font-bold text-white shadow-md hover:bg-red-700"
+              >
+                ⚔️ ATTACK
+              </motion.button>
+            )}
           </div>
         </div>
       </motion.div>
