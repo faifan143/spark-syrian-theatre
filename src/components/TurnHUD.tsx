@@ -175,8 +175,7 @@ export default function WarHUD() {
             onClick={() =>
               phase === "end" ? setConfirmVisible(true) : endPhase()
             }
-            className="mt-2 px-6 py-2 rounded-full text-black font-extrabold text-sm uppercase tracking-widest
-               bg-gradient-to-b from-yellow-400 to-yellow-600 border border-yellow-300/40"
+            className="mt-2 px-6 py-2 rounded-full text-black font-extrabold text-sm uppercase tracking-widest bg-gradient-to-b from-yellow-400 to-yellow-600 border border-yellow-300/40"
           >
             {phase !== "end" ? "Next Phase" : "End Turn"}
           </motion.button>
